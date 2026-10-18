@@ -1,0 +1,212 @@
+[
+  {
+    "version": "annotated",
+    "path": "code/init_parameters.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/main.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/test.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/trainer.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/trainer_callback.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/__init__.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/models/cca_model.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/models/modeling_llama.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/models/modeling_llava.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/models/modeling_qwen2.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/models/modeling_qwen3.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/models/modeling_t5.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/models/sdl_loss.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/models/sinkhorn_knopp.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/models/utils.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/models/__init__.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/utils/cutom_llm.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/utils/dataset_utils.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/utils/metric.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/utils/utils.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "annotated",
+    "path": "code/utils/__init__.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/init_parameters.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/main.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/test.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/trainer.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/trainer_callback.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/__init__.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/models/cca_model.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/models/modeling_llama.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/models/modeling_llava.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/models/modeling_qwen2.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/models/modeling_qwen3.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/models/modeling_t5.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/models/sdl_loss.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/models/sinkhorn_knopp.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/models/utils.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/models/__init__.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/utils/cutom_llm.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/utils/dataset_utils.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/utils/metric.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/utils/utils.py",
+    "syntax": "pass"
+  },
+  {
+    "version": "no-comments",
+    "path": "code/utils/__init__.py",
+    "syntax": "pass"
+  }
+]
