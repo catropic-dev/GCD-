@@ -38,6 +38,7 @@ form button:hover{color:#102525;background:#a5f4de}
 .answer button{margin:6px 5px 0 0;font-size:12px}
 details{margin-top:13px}summary{cursor:pointer;color:var(--accent)}
 #transcript{padding:5px 0;color:var(--muted)} #transcript p{margin:7px 0}
+button:disabled{cursor:default;opacity:.55}
 @media(max-width:870px){.layout{grid-template-columns:1fr}.qa{position:static}.left{display:contents}.player{order:0}.qa{order:1}.chapter-card{order:2;margin:0}header{align-items:start;flex-direction:column}}
 @media(max-width:460px){.chapters{grid-template-columns:repeat(2,minmax(0,1fr))}.info{align-items:start;flex-direction:column}}
 </style>
@@ -57,14 +58,18 @@ details{margin-top:13px}summary{cursor:pointer;color:var(--accent)}
       <section class="card chapter-card">
         <h2>章节</h2>
         <nav class="chapters" id="chapters" aria-label="跳转章节"></nav>
-        <details><summary>查看当前章节讲稿</summary><div id="transcript"></div></details>
+        <details open>
+          <summary>当前章节文字</summary>
+          <div id="transcript"></div>
+          <button id="use-selection" type="button" disabled>将选中文字放入提问框</button>
+        </details>
       </section>
     </div>
     <aside class="card qa">
       <h2>随看随问</h2>
       <p class="muted">在本视频的问答库中即时查答。</p>
       <form id="form">
-        <input id="question" aria-label="你的问题" maxlength="500" placeholder="输入术语、公式或问题" required>
+        <input id="question" aria-label="你的问题" placeholder="输入术语、公式或问题" required>
         <button type="submit">提问</button>
       </form>
       <div class="suggestions" id="suggestions"></div>
@@ -80,9 +85,12 @@ document.querySelector("#title").textContent = story.title;
 const video = document.querySelector('#video');
 const log = document.querySelector('#log');
 const question = document.querySelector('#question');
+const transcript = document.querySelector('#transcript');
+const useSelection = document.querySelector('#use-selection');
 const nav = document.querySelector('#chapters');
 const suggestions = document.querySelector('#suggestions');
 let active = -1;
+let selectedText = '';
 const knowledge = chapters.flatMap((chapter, i) => chapter.qa.map(entry => [i, entry.question, entry.answer, entry.keywords]));
 const compact = text => text.toLowerCase().replace(/[\s，。？、！？：；.,?!:;（）()]/g,'');
 const time = seconds => `${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`;
@@ -107,7 +115,11 @@ function showChapter(i) {
   const chapter=chapters[i];
   document.querySelector('#current').textContent=chapter.title;
   document.querySelector('#reference').textContent=chapter.reference;
-  document.querySelector('#transcript').replaceChildren(...chapter.narration.map(t=>node('p',t)));
+  const points = node('ul', '');
+  points.append(...chapter.points.map(point => node('li', point)));
+  transcript.replaceChildren(node('h3', chapter.title), points, ...chapter.narration.map(text => node('p', text)));
+  selectedText = '';
+  useSelection.disabled = true;
   for(const [j,link] of Array.from(nav.children).entries()) link.setAttribute('aria-current',String(i===j));
   suggestions.replaceChildren(...chapter.qa.slice(0, 3).map(entry => button(entry.question, () => ask(entry.question))), button('解释这一章', () => ask('解释这一章')));
 }
@@ -166,6 +178,21 @@ document.querySelector('#form').addEventListener('submit',event=>{
   question.focus();
 });
 document.querySelector('#speed').addEventListener('change',event=>video.playbackRate=Number(event.target.value));
+document.addEventListener('selectionchange', () => {
+  const selection = document.getSelection();
+  selectedText = selection && transcript.contains(selection.anchorNode) && transcript.contains(selection.focusNode)
+    ? selection.toString().trim().replace(/\s+/g, ' ')
+    : '';
+  useSelection.disabled = !selectedText;
+});
+useSelection.addEventListener('mousedown', event => event.preventDefault());
+useSelection.addEventListener('click', () => {
+  if (!selectedText) return;
+  video.pause();
+  question.value = [question.value.trim(), selectedText].filter(Boolean).join(' ');
+  question.focus();
+  question.setSelectionRange(question.value.length, question.value.length);
+});
 video.addEventListener('timeupdate',update);
 video.addEventListener('seeked',update);
 showChapter(0);

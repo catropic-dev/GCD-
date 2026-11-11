@@ -42,3 +42,5 @@ python paper-video/skills/paper-video/scripts/render.py storyboard.json output/p
 ```
 
 打开 `index.html` 可播放、变速、查看讲稿、提问并跳到对应时间。窗口在本地匹配分镜中预写的问答，匹配不到时提示改用术语或将问题发给 Codex。页面可离线打开，字幕已经写入视频画面，并额外提供 `captions.vtt`。
+
+在播放器的「当前章节文字」中，可选中标题、要点或讲稿，按 Ctrl+C 复制，或点击「将选中文字放入提问框」后补充问题。已生成的旧播放器可用原分镜重新渲染。
