@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import json
 import os
 from pathlib import Path
@@ -39,7 +40,9 @@ def validate(story):
             require_text(chapter, key)
         if len(require_lines(chapter, "points")) > 3:
             raise ValueError("Use at most three points per chapter")
-        require_lines(chapter, "narration")
+        narration = require_lines(chapter, "narration")
+        if "spoken" in chapter and len(require_lines(chapter, "spoken")) != len(narration):
+            raise ValueError("spoken and narration must have the same number of segments")
         for entry in require_list(chapter, "qa"):
             require_text(entry, "question")
             require_text(entry, "answer")
@@ -99,20 +102,40 @@ def audio_jobs(chapters, audio_dir):
     return [
         {"path": str(audio_dir / f"voice-{index:02}-{step:02}.wav"), "text": text}
         for index, chapter in enumerate(chapters)
-        for step, text in enumerate(chapter["narration"])
+        for step, text in enumerate(chapter.get("spoken", chapter["narration"]))
     ]
 
 
-def render(story, asset_dir, output, font, supplied_audio, ffmpeg):
+async def neural_narration(jobs, voice, ffmpeg):
+    try:
+        import edge_tts
+    except ImportError as error:
+        raise ValueError("Install edge-tts to use --neural-voice") from error
+    for job in jobs:
+        wav = Path(job["path"])
+        mp3 = wav.with_suffix(".mp3")
+        try:
+            speech = edge_tts.Communicate(job["text"], voice, rate="-6%", connect_timeout=10, receive_timeout=30)
+            await asyncio.wait_for(speech.save(str(mp3)), timeout=60)
+        except Exception as error:
+            raise ValueError(f"Online speech failed for {wav.stem}: {error}") from error
+        subprocess.run([ffmpeg, "-hide_banner", "-loglevel", "error", "-i", str(mp3),
+                        "-ac", "1", "-ar", "24000", "-c:a", "pcm_s16le", str(wav)],
+                       check=True, timeout=30)
+
+
+def render(story, asset_dir, output, font, supplied_audio, ffmpeg, neural_voice):
     with tempfile.TemporaryDirectory(dir=output.parent) as temporary:
         work = Path(temporary)
         stage = work / "delivery"
         stage.mkdir()
         audio_dir = supplied_audio or work
         jobs = audio_jobs(story["chapters"], audio_dir)
-        if supplied_audio is None:
+        if neural_voice:
+            asyncio.run(neural_narration(jobs, neural_voice, ffmpeg))
+        elif supplied_audio is None:
             if os.name != "nt":
-                raise ValueError("Provide --audio-dir outside Windows")
+                raise ValueError("Provide --audio-dir or --neural-voice outside Windows")
             job_file = work / "speech.json"
             job_file.write_text(json.dumps(jobs, ensure_ascii=False), encoding="utf-8")
             script = Path(__file__).with_name("narrate.ps1")
@@ -174,7 +197,10 @@ def main():
     parser = argparse.ArgumentParser(description="Render a narrated paper walkthrough and interactive player.")
     parser.add_argument("storyboard", type=Path)
     parser.add_argument("output", type=Path, help="New output directory")
-    parser.add_argument("--audio-dir", type=Path)
+    audio = parser.add_mutually_exclusive_group()
+    audio.add_argument("--audio-dir", type=Path)
+    audio.add_argument("--neural-voice", nargs="?", const="zh-CN-XiaoxiaoNeural",
+                       help="Send spoken narration text to Microsoft's online speech service")
     parser.add_argument("--ffmpeg", type=Path, help="FFmpeg executable with libx264 support")
     parser.add_argument("--font", type=Path, default=Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts/msyh.ttc")
     args = parser.parse_args()
@@ -187,7 +213,7 @@ def main():
         output.parent.mkdir(parents=True, exist_ok=True)
         ffmpeg = str(args.ffmpeg.resolve()) if args.ffmpeg else imageio_ffmpeg.get_ffmpeg_exe()
         render(story, args.storyboard.resolve().parent, output, args.font.resolve(),
-               args.audio_dir.resolve() if args.audio_dir else None, ffmpeg)
+               args.audio_dir.resolve() if args.audio_dir else None, ffmpeg, args.neural_voice)
     except (OSError, ValueError, AttributeError, TypeError, wave.Error, subprocess.SubprocessError) as error:
         parser.exit(1, f"Render failed: {error}\n")
 

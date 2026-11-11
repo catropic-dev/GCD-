@@ -17,6 +17,19 @@ python paper-video/skills/paper-video/scripts/render.py storyboard.json output/p
 
 输出目录应为新目录。自定义选项见 `--help`。手工提供 WAV 时使用 `--audio-dir`，文件按从零开始的章节和旁白序号命名，如 `voice-00-00.wav`。所有 WAV 须使用相同 PCM 格式。非 Windows 环境通过 `--font` 指定中文字体。
 
+## 配音和术语读法
+
+每章可提供 `spoken` 数组，逐段对应 `narration`。字幕仍显示 `narration`，合成语音使用 `spoken`。例如字幕写 `log det`，口播写「矩阵行列式的对数」。旧分镜可直接渲染。
+
+需要更自然的音色时，可使用微软联网神经语音。此选项会把口播文本发送给在线语音服务。
+
+```powershell
+python -m pip install edge-tts
+python paper-video/skills/paper-video/scripts/render.py storyboard.json output/paper-neural --neural-voice
+```
+
+默认联网音色为 `zh-CN-XiaoxiaoNeural`。可在 `--neural-voice` 后指定其他音色，例如 `zh-CN-YunxiNeural`。
+
 分镜 JSON 示例。每段旁白对应一次画面切换和一条字幕。每章最多三条屏幕要点，`image` 是可选图片，路径相对于分镜文件。
 
 ```json
