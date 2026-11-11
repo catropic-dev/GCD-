@@ -1,0 +1,20 @@
+{
+  "name": "gcd-research-tools",
+  "interface": {
+    "displayName": "GCD 研究工具"
+  },
+  "plugins": [
+    {
+      "name": "paper-video",
+      "source": {
+        "source": "local",
+        "path": "./paper-video"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

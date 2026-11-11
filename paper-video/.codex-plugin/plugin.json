@@ -1,0 +1,11 @@
+{
+  "name": "paper-video",
+  "version": "1.0.0",
+  "description": "Turn research papers and reading notes into narrated Chinese videos with chapter-aware Q&A.",
+  "skills": "./skills/",
+  "requires_local_executor": true,
+  "interface": {
+    "displayName": "论文视频讲解",
+    "shortDescription": "生成中文论文视频与随看随问播放器"
+  }
+}

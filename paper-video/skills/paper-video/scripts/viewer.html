@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>论文互动讲解</title>
+<style>
+:root{color-scheme:dark;--bg:#0f1828;--card:#18263b;--line:#334760;--ink:#eff5fb;--muted:#acc1d6;--accent:#7ee6c9}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Microsoft YaHei",system-ui,sans-serif}
+main{max-width:1510px;margin:auto;padding:28px clamp(14px,4vw,52px) 48px}
+header{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:22px}
+h1,h2,h3,p{margin:0} h1{font-size:clamp(26px,4vw,43px);letter-spacing:-.045em}
+h2{font-size:21px} h3{font-size:16px} small,.muted{color:var(--muted)}
+a{color:var(--accent)} button,input,select{font:inherit}
+button,select{cursor:pointer;border:1px solid var(--line);background:#21324b;color:var(--ink);border-radius:8px;padding:7px 12px}
+button:hover,button[aria-current="true"]{border-color:var(--accent);color:var(--accent)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.eyebrow{color:var(--accent);letter-spacing:.13em;font-size:12px;font-weight:bold}
+.layout{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(300px,1fr);gap:20px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+video{width:100%;aspect-ratio:16/9;display:block;background:#07111f}
+.info,.qa,.chapter-card{padding:17px 19px}
+.info,.topline{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.chapter-card{margin-top:15px}
+.chapters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:10px}
+.chapters button{text-align:left;line-height:1.4}
+.chapters span{display:block;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.qa{position:sticky;top:14px}
+.qa form{display:flex;gap:6px;margin-top:12px}
+input{min-width:0;width:100%;background:#111d30;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px}
+form button{background:var(--accent);color:#102525;border-color:var(--accent);font-weight:700;white-space:nowrap}
+form button:hover{color:#102525;background:#a5f4de}
+.suggestions{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.suggestions button{font-size:12px}
+.log{max-height:54vh;overflow:auto;display:grid;gap:10px;margin-top:13px}
+.answer{border:1px solid var(--line);background:#111e31;border-radius:10px;padding:11px 13px}
+.answer p{margin:5px 0;white-space:pre-wrap}
+.answer button{margin:6px 5px 0 0;font-size:12px}
+details{margin-top:13px}summary{cursor:pointer;color:var(--accent)}
+#transcript{padding:5px 0;color:var(--muted)} #transcript p{margin:7px 0}
+@media(max-width:870px){.layout{grid-template-columns:1fr}.qa{position:static}.left{display:contents}.player{order:0}.qa{order:1}.chapter-card{order:2;margin:0}header{align-items:start;flex-direction:column}}
+@media(max-width:460px){.chapters{grid-template-columns:repeat(2,minmax(0,1fr))}.info{align-items:start;flex-direction:column}}
+</style>
+<main>
+  <header>
+    <h1 id="title"></h1>
+  </header>
+  <div class="layout">
+    <div class="left">
+      <section class="card player" aria-label="视频">
+        <video id="video" controls preload="metadata" playsinline src="lecture.mp4"></video>
+        <div class="info">
+          <div><h2 id="current"></h2><small id="reference"></small></div>
+          <select id="speed" aria-label="播放速度"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
+        </div>
+      </section>
+      <section class="card chapter-card">
+        <h2>章节</h2>
+        <nav class="chapters" id="chapters" aria-label="跳转章节"></nav>
+        <details><summary>查看当前章节讲稿</summary><div id="transcript"></div></details>
+      </section>
+    </div>
+    <aside class="card qa">
+      <h2>随看随问</h2>
+      <p class="muted">在本视频的问答库中即时查答。</p>
+      <form id="form">
+        <input id="question" aria-label="你的问题" maxlength="500" placeholder="输入术语、公式或问题" required>
+        <button type="submit">提问</button>
+      </form>
+      <div class="suggestions" id="suggestions"></div>
+      <div class="log" id="log" aria-live="polite" aria-label="问答记录"></div>
+    </aside>
+  </div>
+</main>
+<script>
+const story = /* STORY_DATA */;
+const chapters = story.chapters;
+document.title = story.title;
+document.querySelector("#title").textContent = story.title;
+const video = document.querySelector('#video');
+const log = document.querySelector('#log');
+const question = document.querySelector('#question');
+const nav = document.querySelector('#chapters');
+const suggestions = document.querySelector('#suggestions');
+let active = -1;
+const knowledge = chapters.flatMap((chapter, i) => chapter.qa.map(entry => [i, entry.question, entry.answer, entry.keywords]));
+const compact = text => text.toLowerCase().replace(/[\s，。？、！？：；.,?!:;（）()]/g,'');
+const time = seconds => `${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`;
+function node(tag, content) {
+  const element = document.createElement(tag);
+  element.textContent = content;
+  return element;
+}
+function button(label, action) {
+  const element = node('button', label);
+  element.type = 'button';
+  element.addEventListener('click', action);
+  return element;
+}
+function jump(i) {
+  video.currentTime = chapters[i].start + .04;
+  showChapter(i);
+}
+function showChapter(i) {
+  if(i===active) return;
+  active=i;
+  const chapter=chapters[i];
+  document.querySelector('#current').textContent=chapter.title;
+  document.querySelector('#reference').textContent=chapter.reference;
+  document.querySelector('#transcript').replaceChildren(...chapter.narration.map(t=>node('p',t)));
+  for(const [j,link] of Array.from(nav.children).entries()) link.setAttribute('aria-current',String(i===j));
+  suggestions.replaceChildren(...chapter.qa.slice(0, 3).map(entry => button(entry.question, () => ask(entry.question))), button('解释这一章', () => ask('解释这一章')));
+}
+function update() {
+  const i=chapters.findLastIndex(c=>c.start<=video.currentTime+.03);
+  showChapter(Math.max(i,0));
+}
+function score(query, entry) {
+  const title=compact(entry[1]);
+  if(query===title) return 100;
+  let value=0;
+  for(const term of entry[3]) if(compact(term) && query.includes(compact(term))) value+=2+Math.min(term.length,6);
+  if(title.includes(query)&&query.length>=4) value+=6;
+  if(value>0&&entry[0]===active) value+=1;
+  return value;
+}
+function card(query, answer, index, related) {
+  const item=node('article','');
+  item.className='answer';
+  item.append(node('h3',query),node('p',answer));
+  if(index!==null) {
+    item.append(node('small',chapters[index].reference),node('br',''));
+    item.append(button(`跳到 ${time(chapters[index].start)} · ${chapters[index].section}`,()=>jump(index)));
+  }
+  if(related) item.append(button(related[1],()=>ask(related[1])));
+  log.prepend(item);
+}
+function ask(input) {
+  const raw=input.trim();
+  if(!raw) return;
+  video.pause();
+  const query=compact(raw);
+  if(['解释这一章','刚才什么意思','我没听懂','再解释一下','刚才那段','再讲一下'].includes(query)) {
+    card(raw,chapters[active].narration.join('\n\n'),active);
+    return;
+  }
+  const matches=knowledge.map(entry=>({entry,value:score(query,entry)})).filter(x=>x.value>=4)
+    .sort((a,b)=>b.value-a.value);
+  if(matches.length) {
+    const best=matches[0].entry;
+    const other=matches.find(x=>x.entry[0]!==best[0]);
+    card(raw,best[2],best[0],other?.entry);
+  } else {
+    card(raw,'讲稿和旁注没有找到足够相关的回答。可以试试输入公式编号、图表编号或术语，也可以把原问题发到 Codex 对话。',null,knowledge.find(entry => entry[0] === active));
+  }
+}
+chapters.forEach((chapter,i)=>{
+  const link=button(chapter.section,()=>jump(i));
+  link.append(node('span',time(chapter.start)));
+  nav.append(link);
+});
+document.querySelector('#form').addEventListener('submit',event=>{
+  event.preventDefault();
+  ask(question.value);
+  question.value='';
+  question.focus();
+});
+document.querySelector('#speed').addEventListener('change',event=>video.playbackRate=Number(event.target.value));
+video.addEventListener('timeupdate',update);
+video.addEventListener('seeked',update);
+showChapter(0);
+</script>
+</html>
