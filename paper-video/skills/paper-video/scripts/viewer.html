@@ -45,6 +45,7 @@ button:disabled{cursor:default;opacity:.55}
 <main>
   <header>
     <h1 id="title"></h1>
+    <a id="paper-pdf" href="paper.pdf" target="_blank" rel="noopener" hidden>打开论文 PDF</a>
   </header>
   <div class="layout">
     <div class="left">
@@ -82,6 +83,7 @@ const story = /* STORY_DATA */;
 const chapters = story.chapters;
 document.title = story.title;
 document.querySelector("#title").textContent = story.title;
+document.querySelector("#paper-pdf").hidden = !story.hasPaperPdf;
 const video = document.querySelector('#video');
 const log = document.querySelector('#log');
 const question = document.querySelector('#question');

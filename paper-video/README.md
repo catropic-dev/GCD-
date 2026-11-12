@@ -17,6 +17,10 @@ python paper-video/skills/paper-video/scripts/render.py storyboard.json output/p
 
 输出目录应为新目录。自定义选项见 `--help`。手工提供 WAV 时使用 `--audio-dir`，文件按从零开始的章节和旁白序号命名，如 `voice-00-00.wav`。所有 WAV 须使用相同 PCM 格式。非 Windows 环境通过 `--font` 指定中文字体。
 
+## 论文 PDF
+
+渲染时可加 `--paper-pdf 已旁注的论文.pdf`，输出目录会额外保存一份独立的 `paper.pdf`。点击播放器标题旁的「打开论文 PDF」可阅读。需要修改或加批注时，用本机 PDF 编辑器打开这份文件。
+
 ## 配音和术语读法
 
 每章可提供 `spoken` 数组，逐段对应 `narration`。字幕仍显示 `narration`，合成语音使用 `spoken`。例如字幕写 `log det`，口播写「矩阵行列式的对数」。旧分镜可直接渲染。

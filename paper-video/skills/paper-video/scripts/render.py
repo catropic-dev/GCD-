@@ -124,11 +124,13 @@ async def neural_narration(jobs, voice, ffmpeg):
                        check=True, timeout=30)
 
 
-def render(story, asset_dir, output, font, supplied_audio, ffmpeg, neural_voice):
+def render(story, asset_dir, output, font, supplied_audio, ffmpeg, neural_voice, paper_pdf):
     with tempfile.TemporaryDirectory(dir=output.parent) as temporary:
         work = Path(temporary)
         stage = work / "delivery"
         stage.mkdir()
+        if paper_pdf:
+            shutil.copyfile(paper_pdf, stage / "paper.pdf")
         audio_dir = supplied_audio or work
         jobs = audio_jobs(story["chapters"], audio_dir)
         if neural_voice:
@@ -185,6 +187,7 @@ def render(story, asset_dir, output, font, supplied_audio, ffmpeg, neural_voice)
             "-t", f"{end:.6f}", str(stage / "lecture.mp4"),
         ], cwd=work, check=True)
         viewer = Path(__file__).with_name("viewer.html").read_text(encoding="utf-8")
+        story["hasPaperPdf"] = paper_pdf is not None
         data = json.dumps(story, ensure_ascii=False).replace("<", "\\u003c")
         (stage / "index.html").write_text(viewer.replace("/* STORY_DATA */", data), encoding="utf-8")
         output.mkdir()
@@ -197,6 +200,7 @@ def main():
     parser = argparse.ArgumentParser(description="Render a narrated paper walkthrough and interactive player.")
     parser.add_argument("storyboard", type=Path)
     parser.add_argument("output", type=Path, help="New output directory")
+    parser.add_argument("--paper-pdf", type=Path, help="Include a separate local copy of the reviewed paper")
     audio = parser.add_mutually_exclusive_group()
     audio.add_argument("--audio-dir", type=Path)
     audio.add_argument("--neural-voice", nargs="?", const="zh-CN-XiaoxiaoNeural",
@@ -210,10 +214,15 @@ def main():
             raise ValueError("Choose a new output directory")
         story = json.loads(args.storyboard.read_text(encoding="utf-8-sig"))
         validate(story)
+        paper_pdf = args.paper_pdf.resolve() if args.paper_pdf else None
+        if paper_pdf:
+            with paper_pdf.open("rb") as source:
+                if b"%PDF-" not in source.read(1024):
+                    raise ValueError("--paper-pdf must point to a PDF file")
         output.parent.mkdir(parents=True, exist_ok=True)
         ffmpeg = str(args.ffmpeg.resolve()) if args.ffmpeg else imageio_ffmpeg.get_ffmpeg_exe()
         render(story, args.storyboard.resolve().parent, output, args.font.resolve(),
-               args.audio_dir.resolve() if args.audio_dir else None, ffmpeg, args.neural_voice)
+               args.audio_dir.resolve() if args.audio_dir else None, ffmpeg, args.neural_voice, paper_pdf)
     except (OSError, ValueError, AttributeError, TypeError, wave.Error, subprocess.SubprocessError) as error:
         parser.exit(1, f"Render failed: {error}\n")
 
