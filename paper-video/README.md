@@ -19,6 +19,25 @@ python paper-video/skills/paper-video/scripts/render.py storyboard.json output/p
 
 ## 论文 PDF
 
+接收新论文后，Codex 默认生成中文详解 PDF。原文在左，中文解释在右，通过图表、公式和小节定位。详解使用可编辑的 `paper-notes.json` 保存，修改后可重新生成 PDF。
+
+```json
+{
+  "3": [
+    {
+      "anchor": "图 1 · 方法总览",
+      "explanation": "从输入沿箭头读到输出。先明确每个分支接收什么，再看两条分支在哪一步交换信息。"
+    }
+  ]
+}
+```
+
+JSON 键使用从 1 开始的 PDF 实际页码。有旁注的页会增加右侧栏。
+
+```powershell
+python paper-video/skills/paper-video/scripts/explain_pdf.py original.pdf paper-notes.json paper-explained.pdf
+```
+
 渲染时可加 `--paper-pdf 已旁注的论文.pdf`，输出目录会额外保存一份独立的 `paper.pdf`。点击播放器标题旁的「打开论文 PDF」可阅读。需要修改或加批注时，用本机 PDF 编辑器打开这份文件。
 
 ## 配音和术语读法
